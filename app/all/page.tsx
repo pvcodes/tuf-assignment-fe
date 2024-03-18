@@ -24,8 +24,7 @@ const SubmissionTable: React.FC = () => {
 		const fetchData = async () => {
 			try {
 				const response = await axios.get<any>(
-					// "https://tuf-assignment-be.onrender.com/all"
-					"http://localhost:3001/all"
+					`${process.env.API_URL}/all`
 				);
 				const sortedSubmissions = response.data.data.response.sort(
 					(a: Submission, b: Submission) => {
@@ -37,7 +36,7 @@ const SubmissionTable: React.FC = () => {
 				);
 				setSubmissions(sortedSubmissions);
 				setError(null); // Reset error state if successful
-			} catch (error) {
+			} catch (error : any) {
 				console.error("Error fetching data: ", error);
 				setError(error.message); // Set error message in case of failure
 			} finally {
