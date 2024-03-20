@@ -300,8 +300,8 @@ const CodeSubmissionForm: React.FC = () => {
 	};
 
 	return (
-		<div className="flex justify-center items-center h-screen">
-			<div className="w-9/12">
+		<div className="flex justify-center items-center flex-grow">
+			<div className="w-9/12 mt-8">
 				<form onSubmit={handleSubmit} className="space-y-4">
 					<UsernameInput
 						value={formData.username}
