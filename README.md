@@ -1,36 +1,153 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+<h1 align='center'><a href='https://tuf-assignment-fe.vercel.app/'>PiCode</a></h1>
+<p>
 
-## Getting Started
+**NOTE:** might submitting API can give `400` status code, as API used is free, which has limited access
 
-First, run the development server:
+</p>
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## API Endpoint (backend)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1.  ### Code Submission
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+    To submit the code
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+    <b> Endpoint URL: </b> `[POST] /submit`
+    <!--  -->
 
-## Learn More
+    #### Parameters
 
-To learn more about Next.js, take a look at the following resources:
+    ##### Request Body
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+    ```js
+    {
+        username: String;
+        language: String,
+        language_id: Int,
+        sourceCode: String,
+        stdInput: String (optional)
+    }
+    ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+    #### Response
 
-## Deploy on Vercel
+    ##### StatusCode: 200
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+    ```js
+    {
+      success: true,
+      data: {
+        submissionId: String
+      }
+    }
+    ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+    ##### StatusCode: 400
+
+    ```js
+    {
+      success: false,
+      error: <error-msg> | String
+    }
+    ```
+
+2.  ### Get all code submission
+
+    get all submitted codes (all)
+
+    <b> Endpoint URL: </b> `[GET] /all`
+
+    #### Response
+
+    ##### StatusCode: 200
+
+    ```js
+    {
+      success: true,
+      data: [{
+            username: String,
+            language: String,
+            language_id: Int,
+            sourceCode: String,
+            stdInput: String
+      }, ...
+      ]}
+    ```
+
+    ##### StatusCode: 400
+
+    ```js
+    {
+      success: false,
+      error: <error-msg> | String
+    }
+    ```
+
+3.  ### Run submission code
+
+    To run code in [Judge](https://judge0.com/).
+
+    <b> Endpoint URL: </b> `[POST] /run/:submissionId`
+    <!--  -->
+
+    #### Parameters
+
+    ##### Request QueryParams
+
+    _submissionId_: submission id of the code
+
+    #### Response
+
+    ##### StatusCode: 200
+
+    ```js
+    {
+      success: true,
+      data: {
+        message: "Code running by Online Judge, Check Status"
+      }
+    }
+    ```
+
+    ##### StatusCode: 400
+
+    ```js
+    {
+      success: false,
+      error: <error-msg> | String
+    }
+    ```
+
+4.  ### Check submission status
+
+    To run code in [Judge](https://judge0.com/).
+
+    <b> Endpoint URL: </b> `[POST] /status/:submissionId`
+    <!--  -->
+
+    #### Parameters
+
+    ##### Request QueryParams
+
+    _submissionId_: submission id of the code
+
+    #### Response
+
+    ##### StatusCode: 200
+
+    ```js
+    {
+    "stdout": <code-output>,
+    "status_id": Int,
+    "language_id": Int,
+    "stderr": String | null
+    }
+    ```
+
+    ##### StatusCode: 400
+
+    ```js
+    {
+      success: false,
+      error: <error-msg> | String
+    }
+    ```
