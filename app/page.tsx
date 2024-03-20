@@ -207,14 +207,14 @@ const CodeSubmissionForm: React.FC = () => {
 		fetchData();
 	}, []);
 
-	const handleChange = (key: keyof FormData, value: Number) => {
+	const handleChange = (key: keyof FormData, value: Number | string) => {
 		if (key === "language_id") {
 			const selectedLang = languages.find((lang) => lang.id === value);
 			if (selectedLang) {
 				setFormData({
 					...formData,
 					language: selectedLang.name,
-					[key]: value,
+					[key]: value as any,
 				});
 			} else {
 				console.error("unable to set form");
@@ -301,10 +301,7 @@ const CodeSubmissionForm: React.FC = () => {
 					<UsernameInput
 						value={formData.username}
 						onChange={(e) =>
-							handleChange(
-								"username",
-								parseInt(e.target.value, 10)
-							)
+							handleChange("username", e.target.value as string)
 						}
 					/>
 					<LanguageSelect
@@ -319,15 +316,13 @@ const CodeSubmissionForm: React.FC = () => {
 					/>
 					<SourceCodeEditor
 						value={formData.sourceCode}
-						onChange={(value) =>
-							handleChange("sourceCode", parseInt(value, 10))
-						}
+						onChange={(value) => handleChange("sourceCode", value)}
 						language={formData.language}
 					/>
 					<StdInput
 						value={formData.stdInput || ""}
 						onChange={(e) =>
-							handleChange("stdInput", parseInt(e.target.value))
+							handleChange("stdInput", e.target.value)
 						}
 					/>
 					<button
