@@ -12,6 +12,11 @@ interface Submission {
 	sourceCode: string;
 }
 
+interface StatusResponse {
+	stdout: string;
+	stderr: string | null;
+}
+
 const SubmissionTable: React.FC = () => {
 	const [submissions, setSubmissions] = useState<Submission[]>([]);
 	const [selectedSubmission, setSelectedSubmission] =
@@ -19,6 +24,12 @@ const SubmissionTable: React.FC = () => {
 	const [searchUsername, setSearchUsername] = useState<string>("");
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
+	const [statusModalVisible, setStatusModalVisible] =
+		useState<boolean>(false);
+	const [statusMessage, setStatusMessage] = useState<string>("");
+	const [stdout, setStdout] = useState<string>("");
+	const [stderr, setStderr] = useState<string | null>(null);
+	const [currSubmissionId, setCurrSubmissionId] = useState<string>("");
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -35,12 +46,12 @@ const SubmissionTable: React.FC = () => {
 					}
 				);
 				setSubmissions(sortedSubmissions);
-				setError(null); // Reset error state if successful
-			} catch (error : any) {
+				setError(null);
+			} catch (error: any) {
 				console.error("Error fetching data: ", error);
-				setError(error.message); // Set error message in case of failure
+				setError(error.message);
 			} finally {
-				setLoading(false); // Set loading to false when done fetching
+				setLoading(false);
 			}
 		};
 
@@ -59,6 +70,28 @@ const SubmissionTable: React.FC = () => {
 		if (selectedSubmission) {
 			navigator.clipboard.writeText(selectedSubmission.sourceCode);
 		}
+	};
+
+	const checkStatus = async (submissionId: string) => {
+		setCurrSubmissionId(submissionId);
+		try {
+			const response = await axios.post<StatusResponse>(
+				`${process.env.API_URL}/status/${submissionId}`
+			);
+
+			const { stdout, stderr } = response.data.data;
+			setStatusMessage("");
+			setStdout(stdout);
+			setStderr(stderr);
+			setStatusModalVisible(true);
+		} catch (error) {
+			setStatusMessage("Failed to check status. Please try again later.");
+			setStatusModalVisible(true);
+		}
+	};
+
+	const closeStatusModal = () => {
+		setStatusModalVisible(false);
 	};
 
 	useEffect(() => {
@@ -130,6 +163,9 @@ const SubmissionTable: React.FC = () => {
 									<th className="border border-gray-300 px-4 py-2">
 										Submission Time (IST)
 									</th>
+									<th className="border border-gray-300 px-4 py-2">
+										Check Status
+									</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -158,6 +194,16 @@ const SubmissionTable: React.FC = () => {
 											{new Date(
 												submission.timestamp
 											).toLocaleString()}
+										</td>
+										<td className="border border-gray-300 px-4 py-2">
+											<button
+												className="text-blue-500 hover:text-blue-700 font-bold py-2 px-4 rounded underline"
+												onClick={() =>
+													checkStatus(submission.id)
+												}
+											>
+												Check Status
+											</button>
 										</td>
 									</tr>
 								))}
@@ -195,6 +241,98 @@ const SubmissionTable: React.FC = () => {
 							>
 								Copy Code
 							</button>
+						</div>
+					</div>
+				)}
+
+				{statusModalVisible && (
+					<div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+						<div className="bg-white p-8 max-w-lg mx-auto rounded-lg">
+							<div className="flex justify-between items-center mb-4">
+								<h2 className="text-xl font-bold">Status</h2>
+								<button
+									onClick={closeStatusModal}
+									className="text-gray-500 hover:text-gray-700 focus:outline-none"
+								>
+									Close
+								</button>
+							</div>
+							{!statusMessage ? (
+								<div>
+									<p>
+										<strong>STDOUT:</strong>
+									</p>
+									<SyntaxHighlighter
+										language="plaintext"
+										style={darcula}
+										customStyle={{
+											width: "100%",
+											maxHeight: "200px",
+											overflow: "auto",
+										}}
+									>
+										{stdout}
+									</SyntaxHighlighter>
+									{stderr && (
+										<div>
+											<p>
+												<strong>STDERR:</strong>
+											</p>
+											<SyntaxHighlighter
+												language="plaintext"
+												style={darcula}
+												customStyle={{
+													width: "100%",
+													maxHeight: "200px",
+													overflow: "auto",
+												}}
+											>
+												{stderr}
+											</SyntaxHighlighter>
+										</div>
+									)}
+								</div>
+							) : (
+								<div className="w-full">
+									<p>{statusMessage}</p>
+									<div
+										className="w-full bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+										role="alert"
+									>
+										<strong className="font-bold">
+											Checking status first time? &nbsp;
+										</strong>
+										<p className="inline-block">
+											<button
+												className="text-blue-500 hover:text-blue-700 rounded underline"
+												onClick={async (e) => {
+													console.log(
+														24,
+														currSubmissionId
+													);
+													await axios
+														.post<StatusResponse>(
+															`${process.env.API_URL}/run/${currSubmissionId}`
+														)
+														.then((response) => {
+															window.alert(
+																"Submission currently been judged, check status shortly!"
+															);
+														})
+														.catch((error) => {
+															window.alert(
+																"Online judge is busy, or server limit exceeded"
+															);
+														});
+													closeModal();
+												}}
+											>
+												Run code
+											</button>
+										</p>
+									</div>
+								</div>
+							)}
 						</div>
 					</div>
 				)}

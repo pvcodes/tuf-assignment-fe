@@ -1,5 +1,5 @@
 "use client";
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import axios from "axios";
 import * as Joi from "joi";
 import Link from "next/link";
@@ -45,28 +45,33 @@ const UsernameInput: React.FC<{
 const LanguageSelect: React.FC<{
 	value: string;
 	onChange: (e: ChangeEvent<HTMLSelectElement>) => void;
-}> = ({ value, onChange }) => (
-	<div>
-		<label
-			htmlFor="language"
-			className="block text-sm font-medium text-gray-700"
-		>
-			Code Language
-		</label>
-		<select
-			id="language"
-			name="language"
-			value={value}
-			onChange={onChange}
-			className="mt-1 p-2 block w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-			required
-		>
-			<option value="cpp">C++</option>
-			<option value="python">Python</option>
-			<option value="javascript">JavaScript</option>
-		</select>
-	</div>
-);
+	languages: Array;
+}> = ({ value, onChange, languages }) => {
+	return (
+		<div>
+			<label
+				htmlFor="language"
+				className="block text-sm font-medium text-gray-700"
+			>
+				Code Language
+			</label>
+			<select
+				id="language"
+				name="language"
+				value={value}
+				onChange={onChange}
+				className="mt-1 p-2 block w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+				required
+			>
+				{languages.map((language) => (
+					<option key={language.id} value={language.id}>
+						{language.name}
+					</option>
+				))}
+			</select>
+		</div>
+	);
+};
 
 const SourceCodeEditor: React.FC<{
 	value: string;
@@ -158,28 +163,71 @@ const Popup: React.FC<{ message: string; onClose: () => void }> = ({
 const schema = Joi.object({
 	username: Joi.string().alphanum().required(),
 	language: Joi.string().required(),
+	language_id: Joi.number().required(),
 	sourceCode: Joi.string().required(),
 	stdInput: Joi.string().optional(),
 });
 
 const CodeSubmissionForm: React.FC = () => {
+	const [languages, setLanguages] = useState([]);
 	const [formData, setFormData] = useState<FormData>({
 		username: "",
-		language: "cpp",
+		language: "Assembly (NASM 2.14.02)",
 		sourceCode: "",
 		stdInput: "",
+		language_id: 45,
 	});
 	const [error, setError] = useState<string>("");
 	const [submissionId, setSubmissionId] = useState<string>("");
 	const [showPopup, setShowPopup] = useState<boolean>(false);
 	const [popupMessage, setPopupMessage] = useState<string>("");
 
-	const handleChange = (key: keyof FormData, value: string) => {
+	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				const [languagesResponse] = await Promise.all([
+					axios.get<any>(`https://ce.judge0.com/languages/all`, {
+						headers: { "Content-Type": "application/json" },
+					}),
+					// Add additional API calls here if needed
+				]);
+
+				setLanguages(languagesResponse.data);
+				console.log(3, languagesResponse.data);
+			} catch (error: any) {
+				console.error("Error fetching data: ", error);
+			}
+		};
+		fetchData();
+	}, []);
+
+	const handleChange = (key: keyof FormData, value: Number) => {
+		if (key === "language_id") {
+			const selectedLang = languages.find(
+				(lang) => lang.id === parseInt(value, 10)
+			);
+			setFormData({
+				...formData,
+				language: selectedLang.name,
+				[key]: parseInt(value, 10),
+			});
+			return;
+		}
+
 		setFormData({ ...formData, [key]: value });
 	};
 
 	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
+
+		// Show loading state
+		setPopupMessage("Submission in process...");
+		setShowPopup(true);
+		console.log(858, formData);
+		if (!formData.stdInput) {
+			delete formData.stdInput;
+		}
+
 		const { error: validationError } = schema.validate(formData, {
 			abortEarly: false,
 		});
@@ -189,8 +237,6 @@ const CodeSubmissionForm: React.FC = () => {
 					.map((err: any) => err.message)
 					.join(", ")
 			);
-			setShowPopup(true);
-
 			setError(
 				validationError.details.map((err) => err.message).join(", ")
 			);
@@ -211,26 +257,28 @@ const CodeSubmissionForm: React.FC = () => {
 			if (response.data.success) {
 				setSubmissionId(response.data.data.submissionId);
 				setPopupMessage(
-					`Submission successful with id ${response.data.data.submissionId}`
+					`Submission successful with id ${response.data.data.submissionId}.`
 				);
-				setShowPopup(true);
 				setError("");
 			} else {
 				setPopupMessage(response.data.error || "Something went wrong.");
-				setShowPopup(true);
 				setSubmissionId("");
 			}
 		} catch (err) {
 			setPopupMessage(`Something went wrong. Please try again.`);
-			setShowPopup(true);
 			setSubmissionId("");
 		}
 
+		// Hide loading state
+		setShowPopup(true);
+		setTimeout(() => setShowPopup(false), 5000); // Hide the popup after 3 seconds
+
 		setFormData({
 			username: "",
-			language: "cpp",
+			language: "Assembly (NASM 2.14.02)",
 			sourceCode: "",
 			stdInput: "",
+			language_id: 45,
 		});
 	};
 
@@ -249,9 +297,10 @@ const CodeSubmissionForm: React.FC = () => {
 						}
 					/>
 					<LanguageSelect
-						value={formData.language}
+						value={formData.language_id}
+						languages={languages}
 						onChange={(e) =>
-							handleChange("language", e.target.value)
+							handleChange("language_id", e.target.value)
 						}
 					/>
 					<SourceCodeEditor
@@ -269,7 +318,7 @@ const CodeSubmissionForm: React.FC = () => {
 						type="submit"
 						className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:bg-indigo-700"
 					>
-						Submit
+						Save and Run
 					</button>
 				</form>
 				{showPopup && (

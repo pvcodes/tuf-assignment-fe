@@ -7,7 +7,6 @@ export default function Navbar() {
 
 	// Determine the link URL and text based on the current route
 	const linkUrl = path === "/all" ? "/" : "/all";
-	console.log(23, path);
 	const linkText =
 		path === "/all" ? "Create new Submission" : "All Submissions";
 
