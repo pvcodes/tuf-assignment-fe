@@ -14,8 +14,14 @@ import "ace-builds/src-noconflict/theme-tomorrow_night_eighties";
 interface FormData {
 	username: string;
 	language: string;
+	language_id: Number;
 	sourceCode: string;
-	stdInput: string;
+	stdInput?: string;
+}
+interface Language {
+	id: number;
+	name: string;
+	is_archived: boolean;
 }
 
 const UsernameInput: React.FC<{
@@ -43,9 +49,9 @@ const UsernameInput: React.FC<{
 );
 
 const LanguageSelect: React.FC<{
-	value: string;
+	value: Number;
 	onChange: (e: ChangeEvent<HTMLSelectElement>) => void;
-	languages: Array;
+	languages: Language[];
 }> = ({ value, onChange, languages }) => {
 	return (
 		<div>
@@ -58,7 +64,7 @@ const LanguageSelect: React.FC<{
 			<select
 				id="language"
 				name="language"
-				value={value}
+				value={Number(value)}
 				onChange={onChange}
 				className="mt-1 p-2 block w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
 				required
@@ -169,7 +175,7 @@ const schema = Joi.object({
 });
 
 const CodeSubmissionForm: React.FC = () => {
-	const [languages, setLanguages] = useState([]);
+	const [languages, setLanguages] = useState<Language[]>([]);
 	const [formData, setFormData] = useState<FormData>({
 		username: "",
 		language: "Assembly (NASM 2.14.02)",
@@ -203,14 +209,16 @@ const CodeSubmissionForm: React.FC = () => {
 
 	const handleChange = (key: keyof FormData, value: Number) => {
 		if (key === "language_id") {
-			const selectedLang = languages.find(
-				(lang) => lang.id === parseInt(value, 10)
-			);
-			setFormData({
-				...formData,
-				language: selectedLang.name,
-				[key]: parseInt(value, 10),
-			});
+			const selectedLang = languages.find((lang) => lang.id === value);
+			if (selectedLang) {
+				setFormData({
+					...formData,
+					language: selectedLang.name,
+					[key]: value,
+				});
+			} else {
+				console.error("unable to set form");
+			}
 			return;
 		}
 
@@ -293,25 +301,33 @@ const CodeSubmissionForm: React.FC = () => {
 					<UsernameInput
 						value={formData.username}
 						onChange={(e) =>
-							handleChange("username", e.target.value)
+							handleChange(
+								"username",
+								parseInt(e.target.value, 10)
+							)
 						}
 					/>
 					<LanguageSelect
 						value={formData.language_id}
 						languages={languages}
 						onChange={(e) =>
-							handleChange("language_id", e.target.value)
+							handleChange(
+								"language_id",
+								parseInt(e.target.value)
+							)
 						}
 					/>
 					<SourceCodeEditor
 						value={formData.sourceCode}
-						onChange={(value) => handleChange("sourceCode", value)}
+						onChange={(value) =>
+							handleChange("sourceCode", parseInt(value, 10))
+						}
 						language={formData.language}
 					/>
 					<StdInput
-						value={formData.stdInput}
+						value={formData.stdInput || ""}
 						onChange={(e) =>
-							handleChange("stdInput", e.target.value)
+							handleChange("stdInput", parseInt(e.target.value))
 						}
 					/>
 					<button

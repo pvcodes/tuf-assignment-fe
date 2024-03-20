@@ -13,8 +13,20 @@ interface Submission {
 }
 
 interface StatusResponse {
-	stdout: string;
-	stderr: string | null;
+	success: boolean;
+	data: {
+		stdout: string;
+		stderr: string | null;
+		time: string;
+		memory: number;
+		token: string;
+		compile_output: string | null;
+		message: string | null;
+		status: {
+			id: number;
+			description: string;
+		};
+	};
 }
 
 const SubmissionTable: React.FC = () => {
