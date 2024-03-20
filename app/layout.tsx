@@ -70,6 +70,7 @@ export default function RootLayout({
 					<a
 						href="https://pvcodes.me/"
 						className="text-blue-500 hover:text-blue-700 rounded underline"
+						target="_blank"
 					>
 						pvcodes
 					</a>
