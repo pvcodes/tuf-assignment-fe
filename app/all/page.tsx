@@ -91,11 +91,16 @@ const SubmissionTable: React.FC = () => {
 				`${process.env.API_URL}/status/${submissionId}`
 			);
 
+			console.log(123, response.data);
 			const { stdout, stderr } = response.data.data;
-			setStatusMessage("");
-			setStdout(stdout);
-			setStderr(stderr);
-			setStatusModalVisible(true);
+			if (stdout) {
+				setStatusMessage("");
+				setStdout(stdout);
+				setStderr(stderr);
+				setStatusModalVisible(true);
+			} else {
+				throw "first time";
+			}
 		} catch (error) {
 			setStatusMessage("Failed to check status. Please try again later.");
 			setStatusModalVisible(true);

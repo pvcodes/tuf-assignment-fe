@@ -198,8 +198,13 @@ const CodeSubmissionForm: React.FC = () => {
 					// Add additional API calls here if needed
 				]);
 
-				setLanguages(languagesResponse.data);
-				console.log(3, languagesResponse.data);
+				let data: Language[] = languagesResponse.data;
+				const nonArchivedLanguages = data.filter(
+					(language) => !language.is_archived
+				);
+
+				setLanguages(nonArchivedLanguages);
+				console.log(3, nonArchivedLanguages);
 			} catch (error: any) {
 				console.error("Error fetching data: ", error);
 			}
