@@ -68,7 +68,7 @@ export default function RootLayout({
 				<div className="bg-white border-gray-200   mt-4 mb-1 px-4 text-center">
 					Made with ❤️ by &nbsp;
 					<a
-						href="https://tw-elements.com/"
+						href="https://pvcodes.me/"
 						className="text-blue-500 hover:text-blue-700 rounded underline"
 					>
 						pvcodes
