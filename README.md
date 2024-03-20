@@ -136,10 +136,10 @@
 
     ```js
     {
-    "stdout": <code-output>,
-    "status_id": Int,
-    "language_id": Int,
-    "stderr": String | null
+        stdout: String,
+        status_id: Int,
+        language_id: Int,
+        stderr: String | null
     }
     ```
 
